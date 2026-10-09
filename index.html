@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ide ke PRD</title>
+<style>
+:root{--bg:#f4f3ef;--card:#fff;--ink:#1d2327;--mute:#6a7479;--line:#e2e1db;--acc:#1f5f8b;--accbg:#e3eef6;--ok:#1d7a4a;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14191c;--card:#1d2428;--ink:#e6eaec;--mute:#92a0a6;--line:#2b363b;--acc:#6fb0dd;--accbg:#1c3141;--ok:#6fd39b}}
+:root[data-theme="dark"]{--bg:#14191c;--card:#1d2428;--ink:#e6eaec;--mute:#92a0a6;--line:#2b363b;--acc:#6fb0dd;--accbg:#1c3141;--ok:#6fd39b}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{padding:18px 24px 6px}
+h1{margin:0;font-size:20px}header p{margin:2px 0 0;color:var(--mute)}
+.wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:16px;padding:14px 24px 28px;align-items:start}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px}
+.steps{display:flex;gap:6px;overflow-x:auto;margin-bottom:14px}
+.steps button{white-space:nowrap;font-size:13px;padding:6px 11px;border-radius:99px}
+.steps button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.steps button.done:not(.on){background:var(--accbg)}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:7px;padding:8px 14px}
+button.p{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:500}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+h2{font-size:16px;margin:0 0 4px}.hint{color:var(--mute);font-size:13px;margin:0 0 14px}
+label{display:block;font-weight:500;font-size:13px;margin:12px 0 4px}
+input,select,textarea{font:inherit;width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:7px;background:var(--card);color:var(--ink)}
+textarea{min-height:92px;resize:vertical}
+.step{display:none}.step.on{display:block}
+.nav{display:flex;justify-content:space-between;gap:8px;margin-top:18px;flex-wrap:wrap}
+.row{display:grid;grid-template-columns:1.1fr 110px 1.6fr 36px;gap:6px;margin-bottom:6px}
+.row button{padding:6px}
+.side{position:sticky;top:12px}
+.tabs{display:flex;gap:6px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+.tabs .sp{flex:1}
+.meter{height:6px;background:var(--line);border-radius:9px;overflow:hidden;margin:2px 0 12px}
+.meter i{display:block;height:100%;background:var(--ok);transition:width .2s}
+.small{font-size:12px;color:var(--mute)}
+.doc{max-height:calc(100vh - 170px);overflow:auto;padding-right:6px}
+.doc h1{font-size:21px;margin:0 0 8px}.doc h2{font-size:16px;margin:20px 0 6px;padding-top:12px;border-top:1px solid var(--line)}
+.doc h3{font-size:14px;margin:14px 0 4px}
+.doc blockquote{margin:6px 0;padding:6px 12px;border-left:3px solid var(--acc);background:var(--accbg);border-radius:0 6px 6px 0}
+.doc ul,.doc ol{padding-left:20px;margin:6px 0}
+.doc p{margin:6px 0}
+.tw{overflow-x:auto}
+.doc table{border-collapse:collapse;width:100%;font-size:13.5px;margin:6px 0}
+.doc th,.doc td{border:1px solid var(--line);padding:6px 9px;text-align:left;vertical-align:top}
+.doc th{background:var(--accbg)}
+#raw{width:100%;min-height:60vh;font:13px/1.5 ui-monospace,Menlo,Consolas,monospace}
+@media(max-width:860px){.wrap{grid-template-columns:1fr;padding:12px 14px 24px}header{padding:14px 14px 4px}.side{position:static}.doc{max-height:none}.row{grid-template-columns:1fr 1fr}.row input:nth-child(3){grid-column:1/-1}}
+.aibar{min-height:20px;margin:-4px 0 10px;display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.aibar label{display:inline-flex;gap:6px;align-items:center;margin:0;font-weight:400;font-size:13px;color:var(--ink)}
+.aibar input{width:auto}.aibar .err{color:#b3261e}
+button:disabled{opacity:.5;cursor:not-allowed}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+<header><h1>Ide ke PRD</h1><p>Isi form langkah demi langkah, dokumen PRD tersusun otomatis di sebelahnya.</p></header>
+<div class="wrap">
+<div class="card">
+  <div class="steps" id="steps"></div>
+
+  <div class="step" data-s="0"><h2>1. Ide dan masalah</h2><p class="hint">Apa yang ingin dibuat, dan masalah apa yang mau diselesaikan?</p>
+    <label for="nama">Nama produk</label><input id="nama" data-k="nama" placeholder="Contoh: Sistem Persediaan Bengkel">
+    <label for="ide">Ringkasan ide (1–2 kalimat)</label><textarea id="ide" data-k="ide" placeholder="Aplikasi untuk memantau stok sparepart..."></textarea>
+    <label for="masalah">Masalah yang ingin diselesaikan</label><textarea id="masalah" data-k="masalah" placeholder="Saat ini stok dicatat manual sehingga..."></textarea>
+    <label for="tujuan">Tujuan (satu baris satu tujuan)</label><textarea id="tujuan" data-k="tujuan" placeholder="Stok selalu terpantau&#10;Barang menipis cepat diketahui"></textarea></div>
+
+  <div class="step" data-s="1"><h2>2. Pengguna</h2><p class="hint">Siapa saja yang memakai, dan apa yang mereka butuhkan?</p>
+    <label for="pengguna">Satu baris satu peran, format: <i>Peran: kebutuhan</i></label>
+    <textarea id="pengguna" data-k="pengguna" style="min-height:140px" placeholder="Admin gudang: mencatat barang masuk dan keluar&#10;Pemilik: memantau stok dan pengeluaran"></textarea></div>
+
+  <div class="step" data-s="2"><h2>3. Fitur</h2><p class="hint">Tentukan prioritas setiap fitur. Yang belum akan dibuat, tulis di bagian bawah.</p>
+    <div id="fitur"></div><button id="addF" type="button">+ Tambah fitur</button>
+    <label for="luar">Di luar cakupan (satu baris satu hal)</label><textarea id="luar" data-k="luar" placeholder="Pembayaran&#10;Integrasi supplier"></textarea></div>
+
+  <div class="step" data-s="3"><h2>4. Aturan bisnis dan data</h2><p class="hint">Aturan yang harus selalu berlaku dan data yang dikelola.</p>
+    <label for="aturan">Aturan bisnis (satu baris satu aturan)</label><textarea id="aturan" data-k="aturan" placeholder="Stok di bawah minimum berstatus Stok Menipis"></textarea>
+    <label for="data">Data, format: <i>Nama data: kolom1, kolom2</i></label><textarea id="data" data-k="data" placeholder="Barang: kode, nama, kategori, stok, stok minimum"></textarea></div>
+
+  <div class="step" data-s="4"><h2>5. Teknis dan keberhasilan</h2><p class="hint">Batasan teknis dan cara mengukur sistem sudah berhasil.</p>
+    <label for="platform">Platform</label><select id="platform" data-k="platform"><option value="">Belum ditentukan</option><option>Web (diakses lewat browser)</option><option>Aplikasi lokal (satu komputer)</option><option>Web dan mobile</option></select>
+    <label for="jumlah">Perkiraan jumlah pengguna</label><input id="jumlah" data-k="jumlah" placeholder="Contoh: 3–5 orang">
+    <label for="batas">Batasan teknis lain</label><textarea id="batas" data-k="batas" style="min-height:60px" placeholder="Harus bisa dibuka di HP"></textarea>
+    <label for="sukses">Kriteria berhasil (satu baris satu kriteria)</label><textarea id="sukses" data-k="sukses" style="min-height:70px" placeholder="Stok di sistem sama dengan stok fisik"></textarea></div>
+
+  <div class="step" data-s="5"><h2>6. Pertanyaan terbuka</h2><p class="hint">Hal yang belum diputuskan. Sistem juga menambahkan saran pertanyaan otomatis di PRD.</p>
+    <label for="terbuka">Satu baris satu pertanyaan</label><textarea id="terbuka" data-k="terbuka" style="min-height:130px" placeholder="Siapa yang boleh menghapus transaksi?"></textarea></div>
+
+  <div class="nav"><div><button id="prev" type="button">Sebelumnya</button> <button id="next" class="p" type="button">Berikutnya</button></div>
+  <div><button id="ex" type="button">Isi contoh</button> <button id="rs" type="button">Kosongkan</button></div></div>
+</div>
+
+<div class="card side">
+  <div class="tabs"><button id="t1" class="p" type="button">Pratinjau</button><button id="t2" type="button">Markdown</button><span class="sp"></span><button id="pdf" type="button">Unduh PDF</button><button id="cp" type="button">Salin</button></div>
+  <div class="small" id="mt"></div><div class="meter"><i id="mb"></i></div>
+  <div class="aibar" id="aibar" aria-live="polite"></div>
+  <div class="doc" id="doc"></div>
+  <textarea id="raw" style="display:none" readonly aria-label="PRD dalam format Markdown"></textarea>
+</div>
+</div>
+
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const ea=s=>esc(s).replace(/"/g,'&quot;');
+const L=s=>(s||'').split('\n').map(x=>x.trim()).filter(Boolean);
+const cell=s=>String(s||'-').replace(/\|/g,'/');
+const BLANK=()=>({nama:'',ide:'',masalah:'',tujuan:'',pengguna:'',luar:'',aturan:'',data:'',platform:'',jumlah:'',batas:'',sukses:'',terbuka:'',fitur:[{n:'',p:'Wajib',d:''}]});
+const STEPS=['Ide','Pengguna','Fitur','Aturan & data','Teknis','Pertanyaan'];
+const EX={nama:'Sistem Persediaan Barang Bengkel',ide:'Aplikasi untuk mengelola dan memantau persediaan sparepart, komponen, dan peralatan bengkel.',masalah:'Stok masih dicatat manual sehingga sering terlambat diketahui saat barang hampir habis, dan sulit melihat berapa nilai barang yang masuk dan keluar tiap bulan.',tujuan:'Kondisi stok selalu terpantau\nBarang yang menipis cepat diketahui\nPemasukan dan pengeluaran barang terekam rapi',pengguna:'Admin gudang: mencatat barang masuk dan keluar\nMekanik: mengambil barang untuk perbaikan\nPemilik: memantau stok dan nilai pengeluaran',fitur:[{n:'Dashboard statistik',p:'Wajib',d:'Ringkasan stok, transaksi bulan ini, dan grafik'},{n:'Data barang',p:'Wajib',d:'Daftar barang dengan stok dan stok minimum'},{n:'Pencatatan barang masuk',p:'Wajib',d:'Riwayat dan input barang masuk dari supplier'},{n:'Pencatatan barang keluar',p:'Wajib',d:'Riwayat dan input pemakaian barang'},{n:'Monitoring stok',p:'Penting',d:'Indikator Aman, Stok Menipis, Habis'},{n:'Ekspor laporan',p:'Nanti',d:'Unduh laporan ke Excel atau PDF'}],luar:'Pembayaran\nPenjualan ke pelanggan\nPayroll dan akuntansi\nIntegrasi supplier',aturan:'Barang masuk menambah stok\nBarang keluar mengurangi stok dan tidak boleh melebihi stok\nStok di bawah stok minimum berstatus Stok Menipis\nStok 0 berstatus Habis',data:'Barang: kode, nama, kategori, satuan, stok, stok minimum\nBarang masuk: tanggal, nomor transaksi, supplier, barang, jumlah, harga\nBarang keluar: tanggal, nomor transaksi, barang, jumlah, keperluan, pemakai',platform:'Web (diakses lewat browser)',jumlah:'3–5 orang',batas:'Tampilan harus nyaman di komputer dan HP',sukses:'Stok di sistem sama dengan stok fisik\nBarang menipis terlihat tanpa perlu cek manual',terbuka:'Siapa yang boleh mengubah stok minimum?'};
+let S=BLANK(), step=0, view='doc';
+try{const j=localStorage.getItem('prd_v1');if(j)S=Object.assign(BLANK(),JSON.parse(j))}catch(e){}
+delete S.ai;delete S.useAi;delete S.aiKey;
+const save=()=>{try{localStorage.setItem('prd_v1',JSON.stringify(S))}catch(e){}};
+
+function split2(l,seps){const m=l.match(seps);return m?[m[1].trim(),m[2].trim()]:[l,''];}
+function gen(){
+  const o=[],sec=(t,b)=>{o.push('## '+t);o.push(...(b&&b.length?b:['_Belum diisi._']));o.push('')};
+  const peran=L(S.pengguna).map(l=>split2(l,/^(.+?)\s*(?::|\s[-–—]\s)\s*(.+)$/));
+  const tujuan=L(S.tujuan), fitur=S.fitur.filter(f=>f.n.trim());
+  o.push('# PRD — '+(S.nama.trim()||'Nama Produk'),'');
+  if(S.ide.trim()) o.push('> '+S.ide.trim().replace(/\n+/g,' '),'');
+  sec('1. Latar Belakang',S.masalah.trim()?[S.masalah.trim()]:[]);
+  sec('2. Tujuan',tujuan.map(t=>'- '+t));
+  sec('3. Pengguna',peran.length?['| Peran | Kebutuhan |','|---|---|',...peran.map(r=>`| ${cell(r[0])} | ${cell(r[1])} |`)]:[]);
+  const role=peran[0]?peran[0][0]:'pengguna', goal=tujuan[0]?tujuan[0].toLowerCase():'sistem berjalan sesuai tujuan';
+  const fb=[];
+  if(fitur.length){
+    fb.push('| Fitur | Prioritas | Deskripsi |','|---|---|---|',...fitur.map(f=>`| ${cell(f.n)} | ${f.p==='Wajib'?'Wajib (versi pertama)':f.p} | ${cell(f.d)} |`),'','### User story (draf otomatis, sesuaikan)');
+    fitur.filter(f=>f.p!=='Nanti').forEach(f=>fb.push(`- **${f.n.trim()}**: Sebagai ${role}, saya ingin ${f.d.trim()?f.d.trim().charAt(0).toLowerCase()+f.d.trim().slice(1):f.n.trim().toLowerCase()} agar ${goal}.`));
+  }
+  sec('4. Fitur',fb);
+  sec('5. Di Luar Cakupan',L(S.luar).map(t=>'- '+t));
+  sec('6. Aturan Bisnis',L(S.aturan).map((t,i)=>`${i+1}. ${t}`));
+  const dt=L(S.data).map(l=>split2(l,/^(.+?)\s*:\s*(.+)$/));
+  sec('7. Data yang Dikelola',dt.length?['| Data | Atribut |','|---|---|',...dt.map(r=>`| ${cell(r[0])} | ${cell(r[1])} |`)]:[]);
+  const tk=[];if(S.platform)tk.push('- **Platform:** '+S.platform);if(S.jumlah.trim())tk.push('- **Perkiraan pengguna:** '+S.jumlah.trim());L(S.batas).forEach(t=>tk.push('- '+t));
+  sec('8. Persyaratan Teknis',tk);
+  sec('9. Kriteria Keberhasilan',L(S.sukses).map(t=>'- '+t));
+  const q=L(S.terbuka).map(t=>'- '+t), auto=[];
+  if(!L(S.luar).length)auto.push('Fitur apa yang sengaja belum dibuat pada versi pertama?');
+  if(peran.length>1)auto.push('Apakah hak akses tiap peran berbeda?');
+  if(/transaksi|masuk|keluar/i.test(S.data+S.aturan))auto.push('Apakah transaksi boleh diedit atau dihapus setelah disimpan?');
+  if(!L(S.sukses).length)auto.push('Bagaimana kita tahu sistem ini sudah berhasil?');
+  if(!S.platform)auto.push('Sistem dijalankan secara lokal atau berbasis web?');
+  auto.forEach(t=>q.push('- '+t+' _(saran otomatis)_'));
+  sec('10. Pertanyaan Terbuka',q);
+  return o.join('\n');
+}
+function inline(s){return esc(s).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/_\(([^)]+)\)_/g,'<i>($1)</i>')}
+function md(src){
+  const ls=src.split('\n'),h=[];let i=0;
+  while(i<ls.length){const l=ls[i];
+    if(!l.trim()){i++;continue}
+    if(l[0]==='|'){const rows=[];while(i<ls.length&&ls[i][0]==='|'){rows.push(ls[i]);i++}
+      const c=r=>r.replace(/^\||\|$/g,'').split('|').map(x=>inline(x.trim()));
+      h.push('<div class="tw"><table><thead><tr>'+c(rows[0]).map(x=>`<th>${x}</th>`).join('')+'</tr></thead><tbody>'+rows.slice(2).map(r=>'<tr>'+c(r).map(x=>`<td>${x}</td>`).join('')+'</tr>').join('')+'</tbody></table></div>');continue}
+    let m=l.match(/^(#{1,3}) (.*)/);if(m){h.push(`<h${m[1].length}>${inline(m[2])}</h${m[1].length}>`);i++;continue}
+    if(l.startsWith('> ')){h.push('<blockquote>'+inline(l.slice(2))+'</blockquote>');i++;continue}
+    if(/^- /.test(l)){const it=[];while(i<ls.length&&/^- /.test(ls[i])){it.push(ls[i].slice(2));i++}h.push('<ul>'+it.map(x=>`<li>${inline(x)}</li>`).join('')+'</ul>');continue}
+    if(/^\d+\. /.test(l)){const it=[];while(i<ls.length&&/^\d+\. /.test(ls[i])){it.push(ls[i].replace(/^\d+\. /,''));i++}h.push('<ol>'+it.map(x=>`<li>${inline(x)}</li>`).join('')+'</ol>');continue}
+    h.push('<p>'+(/^_.*_$/.test(l)?`<i class="small">${esc(l.slice(1,-1))}</i>`:inline(l))+'</p>');i++}
+  return h.join('');
+}
+function filled(){return [S.masalah.trim(),L(S.tujuan).length,L(S.pengguna).length,S.fitur.some(f=>f.n.trim()),L(S.luar).length,L(S.aturan).length,L(S.data).length,S.platform||L(S.batas).length,L(S.sukses).length]}
+function update(){
+  const t=gen();$('#doc').innerHTML=md(t);$('#raw').value=t;
+  const f=filled(),n=f.filter(Boolean).length;
+  $('#mt').textContent=`Kelengkapan: ${n} dari ${f.length} bagian utama terisi`;$('#mb').style.width=(n/f.length*100)+'%';
+  renderMsg();save();
+}
+function rowsUI(){
+  $('#fitur').innerHTML=S.fitur.map((f,i)=>`<div class="row"><input data-f="n" data-i="${i}" value="${ea(f.n)}" placeholder="Nama fitur" aria-label="Nama fitur"><select data-f="p" data-i="${i}" aria-label="Prioritas">${['Wajib','Penting','Nanti'].map(p=>`<option${p===f.p?' selected':''}>${p}</option>`).join('')}</select><input data-f="d" data-i="${i}" value="${ea(f.d)}" placeholder="Deskripsi singkat" aria-label="Deskripsi"><button type="button" data-del="${i}" aria-label="Hapus fitur">✕</button></div>`).join('');
+}
+function fieldsUI(){document.querySelectorAll('[data-k]').forEach(e=>e.value=S[e.dataset.k])}
+function stepUI(){
+  document.querySelectorAll('.step').forEach(e=>e.classList.toggle('on',+e.dataset.s===step));
+  $('#steps').innerHTML=STEPS.map((s,i)=>`<button type="button" data-go="${i}" class="${i===step?'on':''}">${i+1}. ${s}</button>`).join('');
+  $('#prev').disabled=step===0;$('#next').disabled=step===STEPS.length-1;
+}
+document.addEventListener('input',e=>{const t=e.target;
+  if(t.dataset.k){S[t.dataset.k]=t.value;update()}
+  else if(t.dataset.f){S.fitur[+t.dataset.i][t.dataset.f]=t.value;update()}});
+document.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;
+  if(t.dataset.go){step=+t.dataset.go;stepUI()}
+  if(t.dataset.del){S.fitur.splice(+t.dataset.del,1);if(!S.fitur.length)S.fitur.push({n:'',p:'Wajib',d:''});rowsUI();update()}});
+$('#addF').onclick=()=>{S.fitur.push({n:'',p:'Wajib',d:''});rowsUI();update()};
+$('#prev').onclick=()=>{step--;stepUI()};$('#next').onclick=()=>{step++;stepUI()};
+$('#ex').onclick=()=>{S=Object.assign(BLANK(),JSON.parse(JSON.stringify(EX)));fieldsUI();rowsUI();update()};
+$('#rs').onclick=()=>{if(confirm('Kosongkan semua isian?')){S=BLANK();fieldsUI();rowsUI();update()}};
+function tab(v){view=v;$('#doc').style.display=v==='doc'?'block':'none';$('#raw').style.display=v==='raw'?'block':'none';$('#t1').classList.toggle('p',v==='doc');$('#t2').classList.toggle('p',v==='raw')}
+$('#t1').onclick=()=>tab('doc');$('#t2').onclick=()=>tab('raw');
+$('#cp').onclick=async()=>{const t=$('#raw').value;let ok=false;
+  try{await navigator.clipboard.writeText(t);ok=true}catch(e){}
+  if(!ok){tab('raw');$('#raw').select();try{ok=document.execCommand('copy')}catch(e){}}
+  $('#cp').textContent=ok?'Tersalin ✓':'Pilih lalu salin manual';setTimeout(()=>$('#cp').textContent='Salin',2000)};
+
+/* ===== AI & PDF ===== */
+let msg='',msgErr=false;
+const setMsg=(t,err)=>{msg=t;msgErr=!!err;renderMsg()};
+function renderMsg(){const b=$('#aibar');if(b)b.innerHTML=msg?`<span class="${msgErr?'err':'small'}">${esc(msg)}</span>`:''}
+async function getCap(n){try{return window.claude&&claude.use?await claude.use(n):null}catch(e){return null}}
+
+async function makePdf(){
+  const J=window.jspdf;if(!J||!J.jsPDF){setMsg('Pustaka PDF belum termuat. Periksa koneksi internet lalu muat ulang.',true);return}
+  const dl=await getCap('downloads');if(!dl){setMsg('Unduhan tidak tersedia di tampilan ini. Pakai tombol Salin.',true);return}
+  const doc=new J.jsPDF({unit:'mm',format:'a4'}),W=210,H=297,M=18,CW=W-2*M;let y=M;
+  const clean=t=>String(t).replace(/\*\*/g,'').replace(/_\(([^)]+)\)_/g,'($1)').replace(/^_|_$/g,'').replace(/[–—]/g,'-').replace(/[^\x20-\x7E\u00A0-\u00FF]/g,'');
+  const need=h=>{if(y+h>H-M){doc.addPage();y=M}};
+  const text=(t,size,style,x,w,color)=>{doc.setFont('helvetica',style);doc.setFontSize(size);doc.setTextColor(color||30);const lh=size*0.3528*1.45;doc.splitTextToSize(clean(t),w).forEach(l=>{need(lh);doc.text(l,x,y+lh*0.75);y+=lh})};
+  const ls=gen().split('\n');let i=0;
+  while(i<ls.length){const l=ls[i];
+    if(!l.trim()){i++;continue}
+    if(l[0]==='|'){const rows=[];while(i<ls.length&&ls[i][0]==='|'){rows.push(ls[i]);i++}
+      const c=r=>r.replace(/^\||\|$/g,'').split('|').map(x=>clean(x.trim()));
+      need(20);doc.autoTable({startY:y,head:[c(rows[0])],body:rows.slice(2).map(c),margin:{left:M,right:M},theme:'grid',styles:{fontSize:9,cellPadding:2,textColor:30},headStyles:{fillColor:[31,95,139],textColor:255}});
+      y=doc.lastAutoTable.finalY+5;continue}
+    let m=l.match(/^(#{1,3}) (.*)/);
+    if(m){const n=m[1].length;
+      if(n===1){text(m[2],18,'bold',M,CW);y+=3}
+      else if(n===2){need(16);y+=4;doc.setDrawColor(200);doc.line(M,y,W-M,y);y+=3;text(m[2],13,'bold',M,CW);y+=1.5}
+      else{need(10);y+=2;text(m[2],11,'bold',M,CW);y+=1}
+      i++;continue}
+    if(l.startsWith('> ')){text(l.slice(2),10,'italic',M+3,CW-3,90);y+=3;i++;continue}
+    if(/^- /.test(l)){text('-',10,'normal',M+1,5);y-=10*0.3528*1.45;text(l.slice(2),10,'normal',M+6,CW-6);y+=0.8;i++;continue}
+    if(/^\d+\. /.test(l)){const n=l.match(/^(\d+)\. /)[1];text(n+'.',10,'normal',M+1,6);y-=10*0.3528*1.45;text(l.replace(/^\d+\. /,''),10,'normal',M+7,CW-7);y+=0.8;i++;continue}
+    text(l,10,'normal',M,CW);y+=1.5;i++}
+  const n=doc.getNumberOfPages();
+  for(let p=1;p<=n;p++){doc.setPage(p);doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(130);doc.text(`${clean(S.nama.trim()||'PRD')}  |  Halaman ${p} dari ${n}`,W/2,H-8,{align:'center'})}
+  const slug=(S.nama.trim()||'dokumen').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'dokumen';
+  try{await dl.save({filename:`PRD-${slug}.pdf`,data:doc.output('blob')});setMsg('PDF siap. Cek hasil unduhan Anda.')}
+  catch(e){setMsg(e&&e.code==='declined'?'Unduhan dibatalkan.':'PDF gagal disimpan. Coba lagi.',true)}
+}
+$('#pdf').onclick=makePdf;
+(async()=>{if(!(await getCap('downloads')))$('#pdf').disabled=true})();
+
+fieldsUI();rowsUI();stepUI();update();
+</script>
+</body>
+</html>
